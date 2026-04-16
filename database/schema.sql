@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS UsageLogs (
     CONSTRAINT fk_usagelogs_classroom
         FOREIGN KEY (classroom_id) REFERENCES Classrooms (id) ON DELETE CASCADE,
     CONSTRAINT fk_usagelogs_user
-        FOREIGN KEY (user_id)      REFERENCES Users      (id) ON DELETE CASCADE
+        FOREIGN KEY (user_id)      REFERENCES Users     (id) ON DELETE CASCADE
 );
 
 -- ------------------------------------------------------------
