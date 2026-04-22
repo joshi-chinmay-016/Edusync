@@ -1,5 +1,6 @@
 # ── Backend Dockerfile ──────────────────────────────────────────────────────
-# Python 3.12 slim image for the FastAPI backend
+# Python 3.12 slim image for the FastAPI backend (better use pyhton 3.12 because some of the functions may not work in 3.13)
+
 FROM python:3.12-slim
 
 # Prevent .pyc files and enable unbuffered logs
