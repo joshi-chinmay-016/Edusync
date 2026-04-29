@@ -88,3 +88,4 @@ CREATE TABLE IF NOT EXISTS AuthLogs (
     CONSTRAINT fk_authlogs_user
         FOREIGN KEY (user_id) REFERENCES Users (id) ON DELETE CASCADE
 );
+
