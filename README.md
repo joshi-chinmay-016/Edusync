@@ -67,7 +67,7 @@ The AI engine computes:
 
 ## Project Structure
 ```
-c:\sem3project_anti\
+c:\sem4project_anti\
 ├── database/
 │   └── schema.sql        # MySQL schemas
 ├── frontend/
