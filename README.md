@@ -11,7 +11,7 @@ EduSync is an AI-driven system designed to help educational institutions manage 
 
 ## Tech Stack
 - Frontend: React (Vite), Tailwind CSS, Chart.js
-- Backend: FastAPI, SQLAlchemy, Pydantic, SQLite
+- Backend: FastAPI, SQLAlchemy, Pydantic, SQLite,MySQL
 - AI Module: Pandas, Scikit-learn, Numpy
 
 ---
