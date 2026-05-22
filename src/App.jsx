@@ -16,6 +16,7 @@ import SpatialMap from './components/SpatialMap';
 import AdminAnalytics from './components/AdminAnalytics';
 import SmartScheduler from './components/SmartScheduler';
 import Logo from './components/Logo';
+import { supabase } from './services/supabase';
 
 // Main layout wrapper
 const Layout = ({ children, user, setUser, theme, toggleTheme }) => {
@@ -202,9 +203,6 @@ function App() {
   };
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('edusync_user');
-    if (savedUser) setUser(JSON.parse(savedUser));
-
     // Theme initialization
     const savedTheme = localStorage.getItem('edusync_theme') || 'dark';
     setTheme(savedTheme);
@@ -214,26 +212,66 @@ function App() {
       document.documentElement.classList.remove('dark');
     }
 
-    setTimeout(() => {
-      setData({
-        usage: {
-          total_bookings: 145,
-          most_used: { "Room 101": 25, "Room 102": 22 },
-          underutilized: { "Room 404": 1, "Room 303": 3 }
-        },
-        peakHours: {
-          peak_hours: { "10": 30, "11": 28, "14": 25, "15": 20 }
-        },
-        recommendations: {
-          recommendations: [
-            "Room 404 is underutilized (1 bookings). Consider scheduling classes here.",
-            "Room 101 is heavily used (25 bookings). Monitor for maintenance.",
-            "Peak demand generally occurs around 10:00 AM. Stagger new classes."
-          ]
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const uMetadata = session.user.user_metadata;
+          setUser({
+            name: uMetadata?.name || session.user.email.split('@')[0],
+            email: session.user.email,
+            role: uMetadata?.role || 'Student'
+          });
+        } else {
+          setUser(null);
         }
-      });
-      setLoading(false);
-    }, 1000);
+      } catch (err) {
+        console.error("Error fetching supabase session:", err);
+      } finally {
+        setTimeout(() => {
+          setData({
+            usage: {
+              total_bookings: 145,
+              most_used: { "Room 101": 25, "Room 102": 22 },
+              underutilized: { "Room 404": 1, "Room 303": 3 }
+            },
+            peakHours: {
+              peak_hours: { "10": 30, "11": 28, "14": 25, "15": 20 }
+            },
+            recommendations: {
+              recommendations: [
+                "Room 404 is underutilized (1 bookings). Consider scheduling classes here.",
+                "Room 101 is heavily used (25 bookings). Monitor for maintenance.",
+                "Peak demand generally occurs around 10:00 AM. Stagger new classes."
+              ]
+            }
+          });
+          setLoading(false);
+        }, 1000);
+      }
+    };
+
+    checkSession();
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (session?.user) {
+          const uMetadata = session.user.user_metadata;
+          setUser({
+            name: uMetadata?.name || session.user.email.split('@')[0],
+            email: session.user.email,
+            role: uMetadata?.role || 'Student'
+          });
+        } else {
+          setUser(null);
+        }
+      }
+    );
+
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, []);
 
   const toggleTheme = () => {
@@ -314,7 +352,7 @@ function App() {
 
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<Login setUser={setUser} showToast={showToast} logEvent={logEvent} />} />
+        <Route path="/login" element={<Login user={user} setUser={setUser} showToast={showToast} logEvent={logEvent} />} />
         
         <Route path="/dashboard" element={user ? <Layout user={user} setUser={setUser} theme={theme} toggleTheme={toggleTheme}><Dashboard data={data} user={user} classrooms={classrooms} bookings={bookings} showToast={showToast} /></Layout> : <Navigate to="/login" />} />
         <Route path="/classrooms" element={user ? <Layout user={user} setUser={setUser} theme={theme} toggleTheme={toggleTheme}><Classrooms user={user} classrooms={classrooms} setClassrooms={setClassrooms} showToast={showToast} /></Layout> : <Navigate to="/login" />} />
