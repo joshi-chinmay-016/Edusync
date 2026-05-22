@@ -3,12 +3,14 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Mail, Lock, User, Shield, ArrowRight } from 'lucide-react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import Logo from './Logo';
+import { supabase } from '../services/supabase';
 
-const Login = ({ setUser, showToast, logEvent }) => {
+const Login = ({ user, setUser, showToast, logEvent }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isRegister, setIsRegister] = useState(false);
   const [isRegisterSuccess, setIsRegisterSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
   
@@ -16,6 +18,13 @@ const Login = ({ setUser, showToast, logEvent }) => {
   const [password, setPassword] = useState('password123');
   const [name, setName] = useState('');
   const [role, setRole] = useState('Student');
+
+  // Auto-redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -33,77 +42,66 @@ const Login = ({ setUser, showToast, logEvent }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+
     if (isRegister) {
-      setIsRegisterSuccess(true);
-      setTimeout(() => {
-        setUser({ name, email, role });
-        if (showToast) showToast(`Welcome, ${name}! Your account has been created.`, 'success');
-        logEvent?.({ action: 'LOGIN', user_email: email });
-        navigate('/dashboard');
-      }, 2500);
+      setIsSubmitting(true);
+      try {
+        const result = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              name: name,
+              role: role
+            }
+          }
+        });
+        console.log("Register Result:", result);
+
+        if (result.error) throw result.error;
+
+        setIsRegisterSuccess(true);
+        setTimeout(() => {
+          setUser({ name, email, role });
+          if (showToast) showToast(`Welcome, ${name}! Your account has been created.`, 'success');
+          logEvent?.({ action: 'LOGIN', user_email: email });
+          navigate('/dashboard');
+        }, 2500);
+      } catch (err) {
+        if (showToast) showToast(err.message || 'Registration failed. Please try again.', 'error');
+      } finally {
+        setIsSubmitting(false);
+      }
       return;
     }
 
-    // Try to authenticate against backend if available
-    let apiUser = null;
+    setIsSubmitting(true);
     try {
-      const formData = new URLSearchParams();
-      formData.append('grant_type', 'password');
-      formData.append('username', email);
-      formData.append('password', password);
-
-      const res = await fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: formData
+      const result = await supabase.auth.signInWithPassword({
+        email,
+        password
       });
+      console.log("Login Result:", result);
 
-      if (res.ok) {
-        const data = await res.json();
-        localStorage.setItem('edusync_token', data.access_token);
+      if (result.error) throw result.error;
 
-        const meRes = await fetch(`${API_URL}/auth/me`, {
-          headers: { Authorization: `Bearer ${data.access_token}` }
-        });
-        if (meRes.ok) {
-          apiUser = await meRes.json();
-        }
-      }
-    } catch (err) {
-      // ignore errors; fallback below
-    }
+      const userMetadata = result.data.user.user_metadata;
+      const apiUser = {
+        name: userMetadata?.name || result.data.user.email.split('@')[0],
+        email: result.data.user.email,
+        role: userMetadata?.role || 'Student'
+      };
 
-    if (apiUser) {
       setUser(apiUser);
       if (showToast) showToast(`Successfully logged in as ${apiUser.name} (${apiUser.role})`, 'success');
       logEvent?.({ action: 'LOGIN', user_email: apiUser.email });
       navigate('/dashboard');
-      return;
+    } catch (err) {
+      if (showToast) showToast(err.message || 'Invalid credentials or connection failure.', 'error');
+    } finally {
+      setIsSubmitting(false);
     }
-
-    // Fallback local mode
-    let userRole = 'Admin';
-    let userName = 'System Admin';
-    const emailLower = email.toLowerCase();
-
-    if (emailLower.includes('faculty') || emailLower.includes('chen') || emailLower.includes('turing') || emailLower.includes('prof')) {
-      userRole = 'Faculty';
-      if (emailLower.includes('chen')) userName = 'Dr. Emily Chen';
-      else if (emailLower.includes('turing')) userName = 'Prof. Alan Turing';
-      else userName = email.split('@')[0].split('.').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-    } else if (emailLower.includes('student') || emailLower.includes('doe')) {
-      userRole = 'Student';
-      if (emailLower.includes('doe')) userName = 'John Doe';
-      else userName = email.split('@')[0].split('.').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-    } else if (!emailLower.includes('admin')) {
-      userRole = 'Faculty'; 
-      userName = email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1);
-    }
-
-    setUser({ name: userName, email, role: userRole });
-    logEvent?.({ action: 'LOGIN', user_email: email });
-    if (showToast) showToast(`Successfully logged in as ${userName} (${userRole})`, 'success');
-    navigate('/dashboard');
   };
 
   return (
@@ -219,10 +217,11 @@ const Login = ({ setUser, showToast, logEvent }) => {
 
             <button 
               type="submit" 
-              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 rounded-xl transition shadow-[0_0_20px_rgba(79,70,229,0.3)] mt-6 flex justify-center items-center group"
+              disabled={isSubmitting}
+              className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800/80 text-white font-bold py-3.5 rounded-xl transition shadow-[0_0_20px_rgba(79,70,229,0.3)] mt-6 flex justify-center items-center group"
             >
-              {isRegister ? 'Create Account' : 'Sign In'}
-              <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+              {isSubmitting ? 'Processing...' : (isRegister ? 'Create Account' : 'Sign In')}
+              {!isSubmitting && <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />}
             </button>
           </form>
         )}

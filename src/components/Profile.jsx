@@ -3,6 +3,7 @@ import { Bookmark, Clock, CheckCircle, Calendar, X, AlertTriangle, LogOut } from
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { supabase } from '../services/supabase';
 
 const Profile = ({ user, setUser, bookings, setBookings, logEvent }) => {
   const navigate = useNavigate();
@@ -24,23 +25,17 @@ const Profile = ({ user, setUser, bookings, setBookings, logEvent }) => {
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
   const handleLogout = async () => {
-    const token = localStorage.getItem('edusync_token');
-    if (token) {
-      try {
-        await fetch(`${API_URL}/auth/logout`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}` }
-        });
-      } catch (err) {
-        // ignore failures
-      }
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error("Supabase signOut error:", err);
     }
 
     logEvent?.({ action: 'LOGOUT', user_email: user?.email });
 
     localStorage.removeItem('edusync_token');
     setUser(null);
-    navigate('/');
+    navigate('/login');
   };
 
   return (
