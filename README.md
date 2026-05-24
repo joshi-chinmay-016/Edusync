@@ -7,7 +7,7 @@ EduSync is an AI-driven system designed to help educational institutions manage 
 - **Classroom Management**: Add and manage classrooms and resources.
 - **Booking Engine**: Sophisticated booking system to prevent conflicts and track history.
 - **AI Analytics**: Uses usage log data to predict demand and offer actionable recommendations.
-- **Generative Dashboard**: Modern, dark-themed UI built with React, Tailwind CSS, and Chart.js.
+- **Generative Dashboard**: Modern-UI built with React, Tailwind CSS, and Chart.js.
 
 ## Tech Stack
 - Frontend: React (Vite), Tailwind CSS, Chart.js
