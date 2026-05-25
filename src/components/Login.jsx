@@ -14,8 +14,8 @@ const Login = ({ user, setUser, showToast, logEvent }) => {
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
   
-  const [email, setEmail] = useState('admin@edusync.local');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [role, setRole] = useState('Student');
 
@@ -35,8 +35,8 @@ const Login = ({ user, setUser, showToast, logEvent }) => {
       setName('');
     } else {
       setIsRegister(false);
-      setEmail('admin@edusync.local');
-      setPassword('password123');
+      setEmail('');
+      setPassword('');
     }
   }, [location]);
 
@@ -46,6 +46,7 @@ const Login = ({ user, setUser, showToast, logEvent }) => {
 
     if (isRegister) {
       setIsSubmitting(true);
+      console.log("Register Started");
       try {
         const result = await supabase.auth.signUp({
           email,
@@ -77,6 +78,7 @@ const Login = ({ user, setUser, showToast, logEvent }) => {
     }
 
     setIsSubmitting(true);
+    console.log("Login Started");
     try {
       const result = await supabase.auth.signInWithPassword({
         email,
@@ -235,13 +237,6 @@ const Login = ({ user, setUser, showToast, logEvent }) => {
         </div>
       </div>
       
-      {!isRegister && (
-         <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 text-gray-500 text-xs w-full text-center px-4">
-           <p className="bg-gray-900/40 backdrop-blur-md px-4 py-2 rounded-full border border-gray-800/50 inline-block">
-             Testing? Try <span className="text-indigo-400 font-medium">faculty@edusync.local</span> or <span className="text-cyan-400 font-medium">student@edusync.local</span> to switch roles.
-           </p>
-         </div>
-      )}
     </div>
   );
 };
