@@ -1,86 +1,133 @@
 # EduSync - Predictive Classroom Resource Optimization
 
-EduSync is an AI-driven system designed to help educational institutions manage classroom resources efficiently and generate AI insights from usage data.
+EduSync is an AI-enabled resource management platform for educational institutions. It combines a React/Tailwind dashboard with a FastAPI backend and analytics pipelines to manage classrooms, resources, bookings, and demand forecasting.
 
-## Features
-- **User Authentication**: JWT-based secure authorization with Role-based Access Control (Admin, Faculty, Student)
-- **Classroom Management**: Add and manage classrooms and resources.
-- **Booking Engine**: Sophisticated booking system to prevent conflicts and track history.
-- **AI Analytics**: Uses usage log data to predict demand and offer actionable recommendations.
-- **Generative Dashboard**: Modern-UI built with React, Tailwind CSS, and Chart.js.
+## Key Features
+- **User authentication** with JWT and role-based access control.
+- **Classroom and resource management** for creating, updating, and listing campus assets.
+- **Booking engine** with conflict checking, booking history, and availability tracking.
+- **AI analytics** for usage patterns, demand prediction, and recommendations.
+- **Modern UI** built with React, Vite, Tailwind CSS, and Chart.js.
 
 ## Tech Stack
-- Frontend: React (Vite), Tailwind CSS, Chart.js
-- Backend: FastAPI, SQLAlchemy, Pydantic, SQLite,MySQL
-- AI Module: Pandas, Scikit-learn, Numpy
+- Frontend: React, Vite, Tailwind CSS, Chart.js
+- Backend: FastAPI, SQLAlchemy, Pydantic
+- Database: local SQLite fallback for development, Docker Compose MySQL for containerized setup
+- AI / analytics: Pandas, NumPy, Scikit-learn
 
----
+## Repository Layout
+```
+c:\sem4project_anti\
+├── backend/              # FastAPI application and API routes
+│   ├── ai_module/        # ML pipelines and analytics logic
+│   ├── database.py       # SQLAlchemy engine and session setup
+│   ├── Dockerfile        # Backend Docker image definition
+│   ├── main.py           # FastAPI application entrypoint
+│   ├── models.py         # DB model definitions
+│   ├── requirements.txt  # Python dependencies
+│   ├── routes/           # API route modules
+│   ├── schemas.py        # Pydantic request/response models
+│   └── seed.py           # Local data seeding script
+├── database/             # SQL initialization scripts for Docker MySQL
+│   ├── schema.sql
+│   └── seed.sql
+├── frontend/             # React frontend application
+│   ├── src/
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── tailwind.config.js
+│   └── vite.config.js
+├── docker-compose.yml    # Optional Docker Compose orchestration
+└── README.md
+```
 
-## 🚀 Setup Instructions
-
-### 1. Database Setup
-We are using SQLite! No installations or configurations are required. The database file will automatically be created when you start the server.
-
-### 2. Backend Setup
-1. Open a terminal in the `backend/` directory.
-2. Create a virtual environment:
+## Local Development
+### Backend
+1. Open a terminal in `backend/`.
+2. Create and activate a virtual environment:
    ```bash
-   python -m venv venv
-   # On Windows:
-   venv\Scripts\activate
-   # On macOS/Linux:
-   source venv/bin/activate
+   python -m venv .venv
+   .venv\Scripts\activate
    ```
-3. Install dependencies:
+3. Install Python dependencies:
    ```bash
    pip install -r requirements.txt
    ```
-4. Seed the initial data into the SQLite database:
+4. (Optional) Seed the local database:
    ```bash
    python seed.py
    ```
-5. Run the FastAPI Server:
+5. Run the backend:
    ```bash
    uvicorn main:app --reload
    ```
-   *The server runs at http://127.0.0.1:8000*
-   *Visit http://127.0.0.1:8000/docs for Swagger UI API docs.*
+6. Open the API docs at `http://127.0.0.1:8000/docs`.
 
-### 3. Frontend Setup
-1. Open another terminal in the `frontend/` directory.
-2. Install Node dependencies:
+#### Notes
+- If `DATABASE_URL` is not set, the backend uses a local SQLite file at `./edusync.db`.
+- You can add a `.env` file in `backend/` to configure `DATABASE_URL`, `SECRET_KEY`, `ALGORITHM`, and `ACCESS_TOKEN_EXPIRE_MINUTES`.
+
+### Frontend
+1. Open a terminal in `frontend/`.
+2. Install dependencies:
    ```bash
    npm install
    ```
-3. Start the Vite development server:
+3. Start the Vite app:
    ```bash
    npm run dev
    ```
-   *The app runs at http://localhost:5173*
+4. Visit the app at the URL shown in the terminal (typically `http://localhost:5173`).
 
-## AI Analytics Overview
-The system tracks all bookings via the `UsageLogs` and `Bookings` tables.
-The AI engine computes:
-- `usage_analysis.py`: Aggregates the most and least utilized rooms and temporal demand peaks.
-- `prediction_model.py`: Runs a lightweight Scikit-learn `LinearRegression` over booking frequency based on days of the week to predict upcoming demand per room.
-- `recommendations.py`: Translates raw AI signals into actionable, descriptive statements exposed to the Generative UI dashboard.
+## Docker Compose (Optional)
+The repository includes `docker-compose.yml` for a containerized MySQL + backend + frontend stack.
 
-## Project Structure
+```bash
+docker compose up --build
 ```
-c:\sem4project_anti\
-├── database/
-│   └── schema.sql        # MySQL schemas
-├── frontend/
-│   ├── src/
-│   ├── package.json
-│   └── vite.config.js    # React + Tailwind Dashboard
-├── backend/
-│   ├── main.py           # FastAPI entry
-│   ├── database.py       
-│   ├── models.py         # SQLAlchemy ORM
-│   ├── schemas.py        # Pydantic validation
-│   ├── auth.py           # JWT rules
-│   ├── routes/
-│   └── ai_module/        # Machine Learning pipelines
-└── README.md
-```
+
+> Note: The current repository includes a backend Dockerfile, but the frontend service build in `docker-compose.yml` expects a `frontend/Dockerfile` that is not present. Use the local frontend dev server if you do not have that Dockerfile.
+
+### Environment Variables
+- `MYSQL_ROOT_PASSWORD`: MySQL root password (default: `rootpassword`)
+- `MYSQL_DATABASE`: Database name (default: `edusync`)
+- `MYSQL_USER`: MySQL user (default: `edusync_user`)
+- `MYSQL_PASSWORD`: MySQL user password (default: `edusync_pass`)
+- `DATABASE_URL`: Backend SQLAlchemy connection string
+- `SECRET_KEY`: JWT secret key
+- `ALGORITHM`: JWT algorithm (default: `HS256`)
+- `ACCESS_TOKEN_EXPIRE_MINUTES`: Token expiry minutes (default: `60`)
+
+## Dependencies
+### Backend
+- `fastapi`
+- `uvicorn`
+- `sqlalchemy`
+- `psycopg2-binary`
+- `python-dotenv`
+- `pydantic`
+- `pydantic-settings`
+- `passlib[bcrypt]`
+- `python-jose[cryptography]`
+- `python-multipart`
+
+### Frontend
+- `react`
+- `react-dom`
+- `react-router-dom`
+- `chart.js`
+- `react-chartjs-2`
+- `axios`
+- `@supabase/supabase-js`
+- `framer-motion`
+- `lucide-react`
+- `tailwind-merge`
+- `@lottiefiles/dotlottie-react`
+
+## AI Analytics
+- `backend/ai_module/usage_analysis.py`: usage trends and demand aggregation
+- `backend/ai_module/prediction_model.py`: demand forecasting model
+- `backend/ai_module/recommendations.py`: recommendation generation from analytics signals
+
+## Getting Help
+If you need to configure a different database backend, set `DATABASE_URL` in `backend/.env` or your shell environment before starting the server.
