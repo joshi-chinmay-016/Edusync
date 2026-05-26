@@ -12,7 +12,7 @@ EduSync is an AI-enabled resource management platform for educational institutio
 ## Tech Stack
 - Frontend: React, Vite, Tailwind CSS, Chart.js
 - Backend: FastAPI, SQLAlchemy, Pydantic
-- Database: local SQLite fallback for development, Docker Compose MySQL for containerized setup
+- Database: Supabase PostgreSQL (via DATABASE_URL)
 - AI / analytics: Pandas, NumPy, Scikit-learn
 
 ## Repository Layout
@@ -28,7 +28,7 @@ c:\sem4project_anti\
 │   ├── routes/           # API route modules
 │   ├── schemas.py        # Pydantic request/response models
 │   └── seed.py           # Local data seeding script
-├── database/             # SQL initialization scripts for Docker MySQL
+├── database/             # Legacy SQL initialization scripts for optional local/legacy setups
 │   ├── schema.sql
 │   └── seed.sql
 ├── frontend/             # React frontend application
@@ -64,8 +64,8 @@ c:\sem4project_anti\
 6. Open the API docs at `http://127.0.0.1:8000/docs`.
 
 #### Notes
-- If `DATABASE_URL` is not set, the backend uses a local SQLite file at `./edusync.db`.
-- You can add a `.env` file in `backend/` to configure `DATABASE_URL`, `SECRET_KEY`, `ALGORITHM`, and `ACCESS_TOKEN_EXPIRE_MINUTES`.
+- The backend requires `DATABASE_URL` to be set to your Supabase PostgreSQL connection string.
+- You can add a `.env` file in the project root to configure `DATABASE_URL`, `SECRET_KEY`, `ALGORITHM`, and `ACCESS_TOKEN_EXPIRE_MINUTES`.
 
 ### Frontend
 1. Open a terminal in `frontend/`.
@@ -80,7 +80,7 @@ c:\sem4project_anti\
 4. Visit the app at the URL shown in the terminal (typically `http://localhost:5173`).
 
 ## Docker Compose (Optional)
-The repository includes `docker-compose.yml` for a containerized MySQL + backend + frontend stack.
+The repository includes `docker-compose.yml` for a containerized backend + frontend stack that uses an external Supabase database connection.
 
 ```bash
 docker compose up --build
@@ -89,14 +89,12 @@ docker compose up --build
 > Note: The current repository includes a backend Dockerfile, but the frontend service build in `docker-compose.yml` expects a `frontend/Dockerfile` that is not present. Use the local frontend dev server if you do not have that Dockerfile.
 
 ### Environment Variables
-- `MYSQL_ROOT_PASSWORD`: MySQL root password (default: `rootpassword`)
-- `MYSQL_DATABASE`: Database name (default: `edusync`)
-- `MYSQL_USER`: MySQL user (default: `edusync_user`)
-- `MYSQL_PASSWORD`: MySQL user password (default: `edusync_pass`)
-- `DATABASE_URL`: Backend SQLAlchemy connection string
+- `DATABASE_URL`: Backend Supabase PostgreSQL connection string
 - `SECRET_KEY`: JWT secret key
 - `ALGORITHM`: JWT algorithm (default: `HS256`)
 - `ACCESS_TOKEN_EXPIRE_MINUTES`: Token expiry minutes (default: `60`)
+- `VITE_SUPABASE_URL`: Supabase project URL for frontend auth
+- `VITE_SUPABASE_ANON_KEY`: Supabase anon key for frontend auth
 
 ## Dependencies
 ### Backend
