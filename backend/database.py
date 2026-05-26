@@ -10,19 +10,20 @@ load_dotenv()
 SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
 
 if not SQLALCHEMY_DATABASE_URL:
-    # Fallback to local SQLite if DATABASE_URL is not set for local dev safety
-    SQLALCHEMY_DATABASE_URL = "sqlite:///./edusync.db"
+    raise ValueError(
+        "DATABASE_URL must be set to your Supabase PostgreSQL connection string."
+    )
 
 # Create engine with PostgreSQL optimizations
-if SQLALCHEMY_DATABASE_URL.startswith("postgresql"):
+if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
     engine = create_engine(
         SQLALCHEMY_DATABASE_URL,
-        pool_pre_ping=True
+        connect_args={"check_same_thread": False}
     )
 else:
     engine = create_engine(
         SQLALCHEMY_DATABASE_URL,
-        connect_args={"check_same_thread": False}
+        pool_pre_ping=True
     )
 
 # Establish sessionmaker and Base
