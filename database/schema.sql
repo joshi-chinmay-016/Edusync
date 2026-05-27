@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS UsageLogs (
 );
 
 -- ------------------------------------------------------------
--- AuthLogs
+-- AuthLogs.
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS AuthLogs (
     id          INT             AUTO_INCREMENT PRIMARY KEY,
