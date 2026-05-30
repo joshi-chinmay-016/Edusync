@@ -36,3 +36,4 @@ env/
 .pytest_cache/
 frontend.zip
 dump.txt
+node_modules/*
